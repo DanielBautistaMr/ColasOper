@@ -2390,8 +2390,6 @@
                     <p>Además, el sistema de cola única logra una mayor utilización de los servidores, lo que indica un uso más eficiente de los recursos.</p>
                     
                     <p><strong>Recomendación:</strong> Implementar un sistema de cola única para optimizar tanto la experiencia del cliente como la eficiencia operativa. El sistema de cola única garantiza un servicio más equitativo (el primero en llegar es el primero en ser atendido) y elimina el problema de "elegir la cola equivocada" que puede causar frustración en los clientes.</p>
-                    
-                    <p>Los gráficos de evolución temporal también muestran que el sistema de cola única mantiene un rendimiento más estable a lo largo del tiempo, con menos fluctuaciones en los tiempos de espera.</p>
                 `;
             } else if (singleBetterWaitTime) {
                 conclusion = `
@@ -2400,8 +2398,6 @@
                     <p>Aunque la utilización de servidores es ligeramente mejor en el sistema de múltiples colas, la mejora en el tiempo de espera del cliente en el sistema de cola única proporciona una ventaja más importante desde la perspectiva de servicio al cliente.</p>
                     
                     <p><strong>Recomendación:</strong> Implementar un sistema de cola única para mejorar la experiencia del cliente. La reducción del tiempo de espera y la percepción más justa del servicio (primero en llegar, primero en ser atendido) compensan cualquier pequeña desventaja en otros aspectos.</p>
-                    
-                    <p>El análisis de la evolución temporal muestra que en momentos de alta demanda, las diferencias entre ambos sistemas se hacen más pronunciadas, favoreciendo al sistema de cola única en términos de eficiencia general.</p>
                 `;
             } else {
                 conclusion = `
@@ -2412,8 +2408,6 @@
                     <p>El sistema de múltiples colas puede ser preferible en este escenario particular debido a sus ventajas específicas, como posiblemente una mejor utilización del espacio físico o la capacidad de especializar servidores para diferentes tipos de servicios.</p>
                     
                     <p><strong>Recomendación:</strong> Evaluar si las ventajas del sistema de múltiples colas compensan la posible percepción de injusticia cuando los clientes ven que otras colas avanzan más rápido que la suya.</p>
-                    
-                    <p>Los datos de evolución temporal muestran que, aunque el sistema de múltiples colas puede tener un rendimiento ligeramente mejor en promedio, presenta mayor variabilidad en los tiempos de espera, lo que podría resultar en experiencias inconsistentes para los clientes.</p>
                 `;
             }
             
@@ -2446,20 +2440,11 @@
                 chartReferences = [];
             }
             
-            // Eliminar contenedores de gráficos adicionales
+            // Eliminar paneles de series temporales
             const timeSeriesPanel = document.querySelector('.time-series-panel');
             if (timeSeriesPanel) {
                 timeSeriesPanel.remove();
             }
-            
-            // Eliminar gráficos adicionales
-            const additionalCharts = document.querySelectorAll('#server-utilization-chart, #queue-length-chart, #throughput-chart');
-            additionalCharts.forEach(chart => {
-                const container = chart.parentElement;
-                if (container && container.classList.contains('comparison-chart-container')) {
-                    container.remove();
-                }
-            });
         }
 
         // Resetear el estado de la simulación
