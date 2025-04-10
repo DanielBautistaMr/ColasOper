@@ -443,8 +443,56 @@
         }
 
         .comparison-chart-container {
+            margin-bottom: 2.5rem;
+            height: 350px;
+            background-color: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+            transition: all 0.3s ease;
+        }
+        
+        .comparison-chart-container:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        /* Contenedor para la leyenda de comparación */
+        .chart-legend-container {
+            display: flex;
+            justify-content: center;
             margin-bottom: 2rem;
-            height: 300px;
+            padding: 1rem;
+            background-color: var(--light-color);
+            border-radius: 8px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 0 1rem;
+        }
+        
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            margin-right: 0.5rem;
+        }
+        
+        .single-queue-color {
+            background-color: rgba(66, 133, 244, 0.8);
+            border: 1px solid rgba(30, 100, 210, 1);
+        }
+        
+        .multiple-queue-color {
+            background-color: rgba(251, 188, 5, 0.8);
+            border: 1px solid rgba(230, 160, 0, 1);
+        }
+        
+        .legend-label {
+            font-weight: 600;
+            font-size: 0.9rem;
         }
 
         .results-table-container {
@@ -494,6 +542,68 @@
             line-height: 1.7;
         }
 
+        /* Diagrama conceptual */
+        .diagram-container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .diagram-title {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: var(--dark-color);
+        }
+
+        .diagram-img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Control de velocidad */
+        .speed-control {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            margin-bottom: 1rem;
+        }
+
+        .speed-label {
+            font-weight: 600;
+            margin-right: 0.5rem;
+        }
+
+        .speed-buttons {
+            display: flex;
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .speed-btn {
+            padding: 0.5rem 1rem;
+            background-color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .speed-btn:not(:last-child) {
+            border-right: 1px solid var(--border-color);
+        }
+
+        .speed-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .speed-btn:hover:not(.active) {
+            background-color: var(--light-color);
+        }
+
         /* Responsividad */
         @media (max-width: 1200px) {
             #simulation-container {
@@ -506,6 +616,10 @@
             
             .stats-panel {
                 grid-template-columns: 1fr 1fr;
+            }
+
+            .comparison-chart-container {
+                height: 300px;
             }
         }
 
@@ -521,6 +635,12 @@
             
             .stats-panel {
                 grid-template-columns: 1fr;
+            }
+            
+            .chart-legend-container {
+                flex-direction: column;
+                align-items: center;
+                gap: 0.5rem;
             }
         }
     </style>
@@ -587,6 +707,15 @@
                     <div class="simulation-status">
                         <div class="status-indicator" id="status-indicator"></div>
                         <span id="status-text">Esperando inicio...</span>
+                    </div>
+                </div>
+                
+                <div class="speed-control">
+                    <span class="speed-label">Velocidad:</span>
+                    <div class="speed-buttons">
+                        <button type="button" class="speed-btn active" data-speed="1">1x</button>
+                        <button type="button" class="speed-btn" data-speed="2">2x</button>
+                        <button type="button" class="speed-btn" data-speed="3">3x</button>
                     </div>
                 </div>
                 
@@ -672,11 +801,136 @@
             
             <section class="results-panel" id="results-panel">
                 <h2>Resultados de la Simulación</h2>
+                
+                <div class="diagram-container">
+                    <h3 class="diagram-title">Diagrama Conceptual de los Sistemas</h3>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="100%" height="auto" class="diagram-img">
+                        <!-- Estilos -->
+                        <defs>
+                            <style>
+                                .title { font-family: 'Segoe UI', sans-serif; font-size: 18px; font-weight: bold; fill: #202124; }
+                                .subtitle { font-family: 'Segoe UI', sans-serif; font-size: 14px; fill: #5F6368; }
+                                .server { fill: #34a853; stroke: #1e8e3e; stroke-width: 2; }
+                                .server-idle { fill: #9aa0a6; stroke: #80868b; stroke-width: 2; }
+                                .queue { fill: #e8f0fe; stroke: #4285f4; stroke-width: 2; }
+                                .person { fill: #4285f4; }
+                                .arrow { fill: none; stroke: #5F6368; stroke-width: 2; }
+                                .text { font-family: 'Segoe UI', sans-serif; font-size: 12px; fill: #3c4043; }
+                                .server-text { font-family: 'Segoe UI', sans-serif; font-size: 12px; fill: white; font-weight: bold; }
+                                .divider { stroke: #dadce0; stroke-width: 2; stroke-dasharray: 5,5; }
+                            </style>
+                        </defs>
+
+                        <!-- Fondo -->
+                        <rect width="800" height="400" fill="white" />
+                        
+                        <!-- Línea divisoria -->
+                        <line x1="400" y1="50" x2="400" y2="380" class="divider" />
+                        
+                        <!-- Título Sistema de Cola Única -->
+                        <text x="200" y="30" text-anchor="middle" class="title">Sistema de Cola Única</text>
+                        <text x="200" y="50" text-anchor="middle" class="subtitle">Un punto de espera centralizado</text>
+                        
+                        <!-- Cola única -->
+                        <rect x="50" y="150" width="200" height="60" rx="8" class="queue" />
+                        
+                        <!-- Personas en cola única -->
+                        <circle cx="70" cy="180" r="15" class="person" />
+                        <circle cx="100" cy="180" r="15" class="person" />
+                        <circle cx="130" cy="180" r="15" class="person" />
+                        <circle cx="160" cy="180" r="15" class="person" />
+                        <circle cx="190" cy="180" r="15" class="person" />
+                        
+                        <!-- Servidores sistema único -->
+                        <rect x="50" y="250" width="40" height="40" rx="8" class="server" />
+                        <text x="70" y="275" text-anchor="middle" class="server-text">S1</text>
+                        
+                        <rect x="120" y="250" width="40" height="40" rx="8" class="server" />
+                        <text x="140" y="275" text-anchor="middle" class="server-text">S2</text>
+                        
+                        <rect x="190" y="250" width="40" height="40" rx="8" class="server-idle" />
+                        <text x="210" y="275" text-anchor="middle" class="server-text">S3</text>
+                        
+                        <rect x="260" y="250" width="40" height="40" rx="8" class="server" />
+                        <text x="280" y="275" text-anchor="middle" class="server-text">S4</text>
+                        
+                        <!-- Flechas de cola a servidores -->
+                        <path d="M 70 210 L 70 250" class="arrow" marker-end="url(#arrowhead)" />
+                        <path d="M 140 210 L 140 250" class="arrow" marker-end="url(#arrowhead)" />
+                        <path d="M 210 210 L 210 250" class="arrow" marker-end="url(#arrowhead)" />
+                        <path d="M 280 210 L 280 250" class="arrow" marker-end="url(#arrowhead)" />
+                        
+                        <!-- Ventajas del sistema único -->
+                        <text x="70" y="330" class="text">+ Tiempo de espera menor</text>
+                        <text x="70" y="350" class="text">+ Mayor equidad (FIFO)</text>
+                        <text x="70" y="370" class="text">+ Mejor distribución de carga</text>
+                        
+                        <!-- Título Sistema de Múltiples Colas -->
+                        <text x="600" y="30" text-anchor="middle" class="title">Sistema de Múltiples Colas</text>
+                        <text x="600" y="50" text-anchor="middle" class="subtitle">Cada servidor tiene su propia cola</text>
+                        
+                        <!-- Múltiples colas -->
+                        <rect x="500" y="120" width="40" height="120" rx="8" class="queue" />
+                        <rect x="560" y="120" width="40" height="120" rx="8" class="queue" />
+                        <rect x="620" y="120" width="40" height="120" rx="8" class="queue" />
+                        <rect x="680" y="120" width="40" height="120" rx="8" class="queue" />
+                        
+                        <!-- Personas en múltiples colas -->
+                        <circle cx="520" cy="140" r="15" class="person" />
+                        <circle cx="520" cy="170" r="15" class="person" />
+                        <circle cx="520" cy="200" r="15" class="person" />
+                        
+                        <circle cx="580" cy="140" r="15" class="person" />
+                        <circle cx="580" cy="170" r="15" class="person" />
+                        
+                        <circle cx="640" cy="140" r="15" class="person" />
+                        
+                        <!-- Servidores sistema múltiple -->
+                        <rect x="500" y="250" width="40" height="40" rx="8" class="server" />
+                        <text x="520" y="275" text-anchor="middle" class="server-text">S1</text>
+                        
+                        <rect x="560" y="250" width="40" height="40" rx="8" class="server" />
+                        <text x="580" y="275" text-anchor="middle" class="server-text">S2</text>
+                        
+                        <rect x="620" y="250" width="40" height="40" rx="8" class="server" />
+                        <text x="640" y="275" text-anchor="middle" class="server-text">S3</text>
+                        
+                        <rect x="680" y="250" width="40" height="40" rx="8" class="server-idle" />
+                        <text x="700" y="275" text-anchor="middle" class="server-text">S4</text>
+                        
+                        <!-- Flechas de colas a servidores -->
+                        <path d="M 520 240 L 520 250" class="arrow" marker-end="url(#arrowhead)" />
+                        <path d="M 580 240 L 580 250" class="arrow" marker-end="url(#arrowhead)" />
+                        <path d="M 640 240 L 640 250" class="arrow" marker-end="url(#arrowhead)" />
+                        <path d="M 700 240 L 700 250" class="arrow" marker-end="url(#arrowhead)" />
+                        
+                        <!-- Ventajas del sistema múltiple -->
+                        <text x="520" y="330" class="text">+ Implementación más sencilla</text>
+                        <text x="520" y="350" class="text">+ Servidores especializados</text>
+                        <text x="520" y="370" class="text">- Tiempo de espera desigual</text>
+                        
+                        <!-- Definición de punta de flecha -->
+                        <defs>
+                            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#5F6368" />
+                            </marker>
+                        </defs>
+                    </svg>
+                </div>
+                
+                <div class="chart-legend-container">
+                    <div class="legend-item">
+                        <div class="legend-color single-queue-color"></div>
+                        <span class="legend-label">Cola Única</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color multiple-queue-color"></div>
+                        <span class="legend-label">Múltiples Colas</span>
+                    </div>
+                </div>
+                
                 <div class="comparison-chart-container">
                     <canvas id="wait-time-chart"></canvas>
-                </div>
-                <div class="comparison-chart-container">
-                    <canvas id="utilization-chart"></canvas>
                 </div>
                 
                 <div class="results-table-container">
@@ -715,14 +969,30 @@
     </footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
     <script>
         // Variables globales
         let simulationRunning = false;
         let simulationComplete = false;
         let simulationType = 'comparison';
         let updateInterval;
-        let waitTimeChart = null;
-        let utilizationChart = null;
+        let simulationSpeed = 1; // Velocidad de simulación: 1x, 2x, 3x
+        let chartReferences = []; // Referencias a todos los gráficos
+        
+        // Variables para datos de series temporales
+        let timeSeriesData = {
+            timePoints: [],
+            singleQueue: {
+                waitTimes: [],
+                queueLengths: [],
+                utilization: []
+            },
+            multipleQueue: {
+                waitTimes: [],
+                queueLengths: [],
+                utilization: []
+            }
+        };
 
         // Elementos DOM
         const simulationForm = document.getElementById('simulation-form');
@@ -741,6 +1011,7 @@
         const singleQueueCustomers = document.getElementById('single-queue-customers');
         const singleServersContainer = document.getElementById('single-servers-container');
         const multipleQueuesContainer = document.getElementById('multiple-queues-container');
+        const speedButtons = document.querySelectorAll('.speed-btn');
         
         // Elementos estadísticos
         const singleWaitTimeElement = document.getElementById('single-wait-time');
@@ -773,6 +1044,23 @@
             
             // Botón de nueva simulación
             newSimulationButton.addEventListener('click', resetSimulation);
+            
+            // Botones de velocidad
+            speedButtons.forEach(button => {
+                button.addEventListener('click', (e) => {
+                    // Actualizar velocidad seleccionada
+                    simulationSpeed = parseInt(e.target.dataset.speed);
+                    
+                    // Actualizar UI
+                    speedButtons.forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+                    
+                    // Si la simulación está en curso, actualizar la velocidad
+                    if (simulationRunning && !simulationComplete) {
+                        updateSimulationSpeed();
+                    }
+                });
+            });
         }
 
         // Inicializar la interfaz de usuario
@@ -801,6 +1089,21 @@
         // Iniciar simulación
         function startSimulation(e) {
             e.preventDefault();
+            
+            // Reiniciar datos de series temporales
+            timeSeriesData = {
+                timePoints: [],
+                singleQueue: {
+                    waitTimes: [],
+                    queueLengths: [],
+                    utilization: []
+                },
+                multipleQueue: {
+                    waitTimes: [],
+                    queueLengths: [],
+                    utilization: []
+                }
+            };
             
             // Actualizar UI para modo simulación
             startButton.disabled = true;
@@ -909,6 +1212,27 @@
                 multipleQueuesContainer.appendChild(queueRow);
             }
         }
+        
+        // Actualizar velocidad de simulación
+        function updateSimulationSpeed() {
+            // Si hay un intervalo en curso, detenerlo
+            if (updateInterval) {
+                clearInterval(updateInterval);
+            }
+            
+            // No reiniciar si la simulación ha finalizado
+            if (simulationComplete) return;
+            
+            // Obtener parámetros actuales
+            const totalTime = parseFloat(document.getElementById('sim-time').value);
+            const currentTime = parseInt(currentTimeDisplay.textContent);
+            
+            // Solo reiniciar si aún no ha terminado
+            if (currentTime < totalTime) {
+                // Reiniciar con nueva velocidad
+                continueAPIMockSimulation(currentTime, totalTime);
+            }
+        }
 
         // Función de simulación simulada para la demostración (en una aplicación real, esto se haría a través de API)
         function startAPIMockSimulation(params) {
@@ -918,7 +1242,23 @@
             // Configurar intervalo de actualización
             let currentTime = 0;
             const totalTime = params.simulationTime;
-            const updateStep = Math.max(1, Math.floor(totalTime / 100)); // Actualizar aprox. 100 veces
+            
+            // Calcular el intervalo base considerando la velocidad
+            const baseUpdateStep = Math.max(1, Math.floor(totalTime / 100)); // Aprox. 100 actualizaciones
+            
+            // Iniciar la simulación con el updateInterval
+            continueAPIMockSimulation(currentTime, totalTime);
+        }
+        
+        // Continuar simulación con la velocidad actual
+        function continueAPIMockSimulation(startTime, totalTime) {
+            let currentTime = startTime;
+            
+            // Calcular paso de actualización basado en la velocidad
+            const updateStep = Math.max(1, Math.floor(totalTime / 100)) * simulationSpeed;
+            
+            // Calcular intervalo de tiempo inverso a la velocidad (más velocidad = menor intervalo)
+            const intervalTime = Math.floor(100 / simulationSpeed);
             
             updateInterval = setInterval(() => {
                 currentTime += updateStep;
@@ -931,9 +1271,21 @@
                 }
                 
                 // Actualizar la UI con datos de simulación simulados
-                updateSimulationUI(generateMockData(currentTime, totalTime, params));
+                updateSimulationUI(generateMockData(currentTime, totalTime, getCurrentParams()));
                 
-            }, 100); // Actualizar cada 100ms para la demo
+            }, intervalTime);
+        }
+        
+        // Obtener parámetros actuales
+        function getCurrentParams() {
+            return {
+                numServers: parseInt(document.getElementById('num-servers').value),
+                arrivalRate: parseFloat(document.getElementById('arrival-rate').value),
+                minServiceTime: parseFloat(document.getElementById('min-service-time').value),
+                maxServiceTime: parseFloat(document.getElementById('max-service-time').value),
+                simulationTime: parseFloat(document.getElementById('sim-time').value),
+                simulationType: simulationType
+            };
         }
 
         // Generar datos simulados para la demostración
@@ -1015,6 +1367,24 @@
             progressBar.style.width = `${progressPercent}%`;
             progressText.textContent = `${progressPercent}%`;
             currentTimeDisplay.textContent = Math.floor(data.currentTime);
+            
+            // Almacenar datos para series temporales
+            if (data.currentTime % 10 === 0) { // Almacenar cada 10 minutos para no sobrecargar
+                timeSeriesData.timePoints.push(Math.floor(data.currentTime));
+                
+                // Datos de cola única
+                timeSeriesData.singleQueue.waitTimes.push(data.singleQueue.avgWaitTime);
+                timeSeriesData.singleQueue.queueLengths.push(data.singleQueue.queueLength);
+                timeSeriesData.singleQueue.utilization.push(data.singleQueue.serverUtilization);
+                
+                // Datos de múltiples colas
+                timeSeriesData.multipleQueue.waitTimes.push(data.multipleQueue.avgWaitTime);
+                // Para múltiples colas, sumamos todas las longitudes
+                timeSeriesData.multipleQueue.queueLengths.push(
+                    data.multipleQueue.queueLengths.reduce((sum, length) => sum + length, 0)
+                );
+                timeSeriesData.multipleQueue.utilization.push(data.multipleQueue.serverUtilization);
+            }
             
             // Actualizar sistema de cola única
             updateSingleQueueView(data.singleQueue);
@@ -1140,6 +1510,9 @@
             createResultCharts(finalResults);
             createResultsTable(finalResults);
             generateConclusion(finalResults);
+            
+            // Añadir gráficos de series temporales
+            createTimeSeriesCharts();
         }
 
         // Generar resultados finales simulados
@@ -1190,9 +1563,66 @@
 
         // Crear gráficos de resultados
         function createResultCharts(results) {
-            // Gráfico de tiempo de espera
+            // Configuración de colores para mejor contraste y accesibilidad
+            const singleQueueColor = 'rgba(66, 133, 244, 0.8)';
+            const singleQueueBorder = 'rgba(30, 100, 210, 1)';
+            const multipleQueueColor = 'rgba(251, 188, 5, 0.8)';
+            const multipleQueueBorder = 'rgba(230, 160, 0, 1)';
+            const fontFamily = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+            
+            // Función para añadir etiquetas de datos
+            const datalabels = {
+                color: '#202124',
+                anchor: 'end',
+                align: 'top',
+                formatter: (value) => value.toFixed(1),
+                font: {
+                    weight: 'bold',
+                    size: 12
+                }
+            };
+
+            // Opciones comunes para todos los gráficos
+            const commonOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 1000,
+                    easing: 'easeOutQuart'
+                },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            font: {
+                                family: fontFamily,
+                                size: 14
+                            },
+                            padding: 20,
+                            usePointStyle: true,
+                            pointStyle: 'rectRounded'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleFont: {
+                            family: fontFamily,
+                            size: 14
+                        },
+                        bodyFont: {
+                            family: fontFamily,
+                            size: 13
+                        },
+                        padding: 12,
+                        cornerRadius: 6,
+                        usePointStyle: true
+                    }
+                }
+            };
+
+            // 1. Gráfico de tiempo de espera mejorado
             const waitTimeCtx = document.getElementById('wait-time-chart').getContext('2d');
-            waitTimeChart = new Chart(waitTimeCtx, {
+            const waitTimeChart = new Chart(waitTimeCtx, {
                 type: 'bar',
                 data: {
                     labels: ['Tiempo de Espera', 'Tiempo en Sistema'],
@@ -1200,32 +1630,292 @@
                         {
                             label: 'Cola Única',
                             data: [results.singleQueue.avgWaitTime, results.singleQueue.avgSystemTime],
-                            backgroundColor: 'rgba(66, 133, 244, 0.7)',
-                            borderColor: 'rgba(66, 133, 244, 1)',
-                            borderWidth: 1
+                            backgroundColor: singleQueueColor,
+                            borderColor: singleQueueBorder,
+                            borderWidth: 2,
+                            borderRadius: 6
                         },
                         {
                             label: 'Múltiples Colas',
                             data: [results.multipleQueue.avgWaitTime, results.multipleQueue.avgSystemTime],
-                            backgroundColor: 'rgba(251, 188, 5, 0.7)',
-                            borderColor: 'rgba(251, 188, 5, 1)',
-                            borderWidth: 1
+                            backgroundColor: multipleQueueColor,
+                            borderColor: multipleQueueBorder,
+                            borderWidth: 2,
+                            borderRadius: 6
                         }
                     ]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
+                    ...commonOptions,
                     plugins: {
+                        ...commonOptions.plugins,
                         title: {
                             display: true,
-                            text: 'Comparación de Tiempos (minutos)',
+                            text: 'Comparación de Tiempos de Espera (minutos)',
+                            color: '#202124',
                             font: {
-                                size: 16
+                                family: fontFamily,
+                                size: 18,
+                                weight: 'bold'
+                            },
+                            padding: {
+                                top: 10,
+                                bottom: 25
                             }
                         },
+                        datalabels: datalabels
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Tiempo (minutos)',
+                                color: '#3c4043',
+                                font: {
+                                    family: fontFamily,
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                color: '#3c4043',
+                                font: {
+                                    family: fontFamily,
+                                    size: 12
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#3c4043',
+                                font: {
+                                    family: fontFamily,
+                                    size: 13,
+                                    weight: 'bold'
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Almacenar referencia para destrucción posterior
+            chartReferences.push(waitTimeChart);
+
+            // 2. Crear un nuevo contenedor para el gráfico de utilización de servidores
+            const utilizationContainer = document.createElement('div');
+            utilizationContainer.className = 'comparison-chart-container';
+            utilizationContainer.innerHTML = '<canvas id="server-utilization-chart"></canvas>';
+            
+            // 3. Crear un nuevo contenedor para el gráfico de longitud máxima de cola
+            const queueLengthContainer = document.createElement('div');
+            queueLengthContainer.className = 'comparison-chart-container';
+            queueLengthContainer.innerHTML = '<canvas id="queue-length-chart"></canvas>';
+            
+            // 4. Crear un nuevo contenedor para el gráfico de rendimiento
+            const throughputContainer = document.createElement('div');
+            throughputContainer.className = 'comparison-chart-container';
+            throughputContainer.innerHTML = '<canvas id="throughput-chart"></canvas>';
+            
+            // Obtener el contenedor padre y agregarlo antes de la tabla de resultados
+            const resultsTableContainer = document.querySelector('.results-table-container');
+            resultsTableContainer.parentNode.insertBefore(utilizationContainer, resultsTableContainer);
+            resultsTableContainer.parentNode.insertBefore(queueLengthContainer, resultsTableContainer);
+            resultsTableContainer.parentNode.insertBefore(throughputContainer, resultsTableContainer);
+            
+            // 2. Gráfico de utilización de servidores
+            const utilizationCtx = document.getElementById('server-utilization-chart').getContext('2d');
+            const utilizationChart = new Chart(utilizationCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Cola Única', 'Múltiples Colas'],
+                    datasets: [{
+                        data: [
+                            results.singleQueue.serverUtilization,
+                            results.multipleQueue.serverUtilization
+                        ],
+                        backgroundColor: [singleQueueColor, multipleQueueColor],
+                        borderColor: [singleQueueBorder, multipleQueueBorder],
+                        borderWidth: 2,
+                        hoverOffset: 15
+                    }]
+                },
+                options: {
+                    ...commonOptions,
+                    cutout: '50%',
+                    plugins: {
+                        ...commonOptions.plugins,
+                        title: {
+                            display: true,
+                            text: 'Utilización de Servidores (%)',
+                            color: '#202124',
+                            font: {
+                                family: fontFamily,
+                                size: 18,
+                                weight: 'bold'
+                            },
+                            padding: {
+                                top: 10,
+                                bottom: 25
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${context.raw.toFixed(1)}%`;
+                                }
+                            }
+                        },
+                        datalabels: {
+                            color: '#fff',
+                            formatter: (value) => `${value.toFixed(1)}%`,
+                            font: {
+                                weight: 'bold',
+                                size: 14
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // 3. Gráfico de longitud máxima de cola
+            const queueLengthCtx = document.getElementById('queue-length-chart').getContext('2d');
+            const queueLengthChart = new Chart(queueLengthCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Cola Única', 'Múltiples Colas'],
+                    datasets: [{
+                        label: 'Longitud Máxima de Cola',
+                        data: [
+                            results.singleQueue.maxQueueLength,
+                            results.multipleQueue.maxQueueLength
+                        ],
+                        backgroundColor: [singleQueueColor, multipleQueueColor],
+                        borderColor: [singleQueueBorder, multipleQueueBorder],
+                        borderWidth: 2,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    ...commonOptions,
+                    indexAxis: 'y', // Gráfico de barras horizontal
+                    plugins: {
+                        ...commonOptions.plugins,
                         legend: {
-                            position: 'bottom'
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Longitud Máxima de Cola (clientes)',
+                            color: '#202124',
+                            font: {
+                                family: fontFamily,
+                                size: 18,
+                                weight: 'bold'
+                            },
+                            padding: {
+                                top: 10,
+                                bottom: 25
+                            }
+                        },
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'end',
+                            formatter: (value) => value,
+                            font: {
+                                weight: 'bold',
+                                size: 14
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Número de Clientes',
+                                color: '#3c4043',
+                                font: {
+                                    family: fontFamily,
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)',
+                                drawBorder: false
+                            }
+                        },
+                        y: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#3c4043',
+                                font: {
+                                    family: fontFamily,
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // 4. Gráfico de rendimiento (clientes por hora)
+            const throughputCtx = document.getElementById('throughput-chart').getContext('2d');
+            const throughputChart = new Chart(throughputCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Cola Única', 'Múltiples Colas'],
+                    datasets: [{
+                        label: 'Clientes Procesados por Hora',
+                        data: [
+                            results.singleQueue.throughput * 60,
+                            results.multipleQueue.throughput * 60
+                        ],
+                        backgroundColor: [singleQueueColor, multipleQueueColor],
+                        borderColor: [singleQueueBorder, multipleQueueBorder],
+                        borderWidth: 2,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    ...commonOptions,
+                    plugins: {
+                        ...commonOptions.plugins,
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Rendimiento (clientes/hora)',
+                            color: '#202124',
+                            font: {
+                                family: fontFamily,
+                                size: 18,
+                                weight: 'bold'
+                            },
+                            padding: {
+                                top: 10,
+                                bottom: 25
+                            }
+                        },
+                        datalabels: {
+                            formatter: (value) => value.toFixed(1),
+                            font: {
+                                weight: 'bold',
+                                size: 14
+                            }
                         }
                     },
                     scales: {
@@ -1233,66 +1923,363 @@
                             beginAtZero: true,
                             title: {
                                 display: true,
-                                text: 'Tiempo (minutos)'
+                                text: 'Clientes por Hora',
+                                color: '#3c4043',
+                                font: {
+                                    family: fontFamily,
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)',
+                                drawBorder: false
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#3c4043',
+                                font: {
+                                    family: fontFamily,
+                                    size: 14,
+                                    weight: 'bold'
+                                }
                             }
                         }
                     }
                 }
             });
             
-            // Gráfico de utilización y eficiencia
-            const utilizationCtx = document.getElementById('utilization-chart').getContext('2d');
-            utilizationChart = new Chart(utilizationCtx, {
-                type: 'bar',
+            // Guardar las referencias a los gráficos para poder destruirlos más tarde
+            chartReferences.push(utilizationChart, queueLengthChart, throughputChart);
+        }
+        
+        // Función para crear gráficos de series temporales
+        function createTimeSeriesCharts() {
+            // Verificar si hay suficientes datos para crear gráficos
+            if (timeSeriesData.timePoints.length < 2) return;
+            
+            // Crear contenedor para gráficos de series temporales
+            const timeSeriesContainer = document.createElement('section');
+            timeSeriesContainer.className = 'time-series-panel';
+            timeSeriesContainer.innerHTML = `
+                <h2>Evolución Temporal de Métricas</h2>
+                <div class="comparison-chart-container">
+                    <canvas id="wait-time-evolution-chart"></canvas>
+                </div>
+                <div class="comparison-chart-container">
+                    <canvas id="queue-length-evolution-chart"></canvas>
+                </div>
+                <div class="comparison-chart-container">
+                    <canvas id="utilization-evolution-chart"></canvas>
+                </div>
+            `;
+            
+            // Añadir contenedor antes del botón de nueva simulación
+            const newSimulationBtn = document.getElementById('new-simulation-btn');
+            newSimulationBtn.parentNode.insertBefore(timeSeriesContainer, newSimulationBtn);
+            
+            // Configuración de colores y opciones comunes
+            const singleQueueColor = 'rgba(66, 133, 244, 0.8)';
+            const singleQueueBorder = 'rgba(30, 100, 210, 1)';
+            const multipleQueueColor = 'rgba(251, 188, 5, 0.8)';
+            const multipleQueueBorder = 'rgba(230, 160, 0, 1)';
+            const fontFamily = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+            
+            const commonOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            font: {
+                                family: fontFamily,
+                                size: 14
+                            },
+                            padding: 20,
+                            usePointStyle: true,
+                            pointStyle: 'rectRounded'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleFont: {
+                            family: fontFamily,
+                            size: 14
+                        },
+                        bodyFont: {
+                            family: fontFamily,
+                            size: 13
+                        },
+                        padding: 12,
+                        cornerRadius: 6
+                    }
+                },
+                elements: {
+                    line: {
+                        tension: 0.3 // Curvas suaves
+                    },
+                    point: {
+                        radius: 3,
+                        hoverRadius: 5
+                    }
+                }
+            };
+            
+            // 1. Gráfico de evolución de tiempos de espera
+            const waitTimeEvolutionCtx = document.getElementById('wait-time-evolution-chart').getContext('2d');
+            const waitTimeEvolutionChart = new Chart(waitTimeEvolutionCtx, {
+                type: 'line',
                 data: {
-                    labels: ['Utilización de Servidores (%)', 'Longitud Máxima de Cola', 'Clientes Procesados por Hora'],
+                    labels: timeSeriesData.timePoints,
                     datasets: [
                         {
                             label: 'Cola Única',
-                            data: [
-                                results.singleQueue.serverUtilization, 
-                                results.singleQueue.maxQueueLength,
-                                results.singleQueue.throughput * 60
-                            ],
-                            backgroundColor: 'rgba(66, 133, 244, 0.7)',
-                            borderColor: 'rgba(66, 133, 244, 1)',
-                            borderWidth: 1
+                            data: timeSeriesData.singleQueue.waitTimes,
+                            borderColor: singleQueueBorder,
+                            backgroundColor: singleQueueColor,
+                            fill: false,
+                            borderWidth: 3
                         },
                         {
                             label: 'Múltiples Colas',
-                            data: [
-                                results.multipleQueue.serverUtilization,
-                                results.multipleQueue.maxQueueLength,
-                                results.multipleQueue.throughput * 60
-                            ],
-                            backgroundColor: 'rgba(251, 188, 5, 0.7)',
-                            borderColor: 'rgba(251, 188, 5, 1)',
-                            borderWidth: 1
+                            data: timeSeriesData.multipleQueue.waitTimes,
+                            borderColor: multipleQueueBorder,
+                            backgroundColor: multipleQueueColor,
+                            fill: false,
+                            borderWidth: 3
                         }
                     ]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
+                    ...commonOptions,
                     plugins: {
+                        ...commonOptions.plugins,
                         title: {
                             display: true,
-                            text: 'Comparación de Eficiencia',
+                            text: 'Evolución del Tiempo de Espera',
+                            color: '#202124',
                             font: {
-                                size: 16
+                                family: fontFamily,
+                                size: 18,
+                                weight: 'bold'
+                            },
+                            padding: {
+                                top: 10,
+                                bottom: 25
                             }
-                        },
-                        legend: {
-                            position: 'bottom'
                         }
                     },
                     scales: {
                         y: {
-                            beginAtZero: true
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Tiempo (minutos)',
+                                color: '#3c4043',
+                                font: {
+                                    family: fontFamily,
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)',
+                                drawBorder: false
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Tiempo de Simulación (minutos)',
+                                color: '#3c4043',
+                                font: {
+                                    family: fontFamily,
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            },
+                            grid: {
+                                display: false
+                            }
                         }
                     }
                 }
             });
+            
+            // 2. Gráfico de evolución de longitudes de cola
+            const queueLengthEvolutionCtx = document.getElementById('queue-length-evolution-chart').getContext('2d');
+            const queueLengthEvolutionChart = new Chart(queueLengthEvolutionCtx, {
+                type: 'line',
+                data: {
+                    labels: timeSeriesData.timePoints,
+                    datasets: [
+                        {
+                            label: 'Cola Única',
+                            data: timeSeriesData.singleQueue.queueLengths,
+                            borderColor: singleQueueBorder,
+                            backgroundColor: singleQueueColor,
+                            fill: false,
+                            borderWidth: 3
+                        },
+                        {
+                            label: 'Múltiples Colas (Total)',
+                            data: timeSeriesData.multipleQueue.queueLengths,
+                            borderColor: multipleQueueBorder,
+                            backgroundColor: multipleQueueColor,
+                            fill: false,
+                            borderWidth: 3
+                        }
+                    ]
+                },
+                options: {
+                    ...commonOptions,
+                    plugins: {
+                        ...commonOptions.plugins,
+                        title: {
+                            display: true,
+                            text: 'Evolución de la Longitud de Cola',
+                            color: '#202124',
+                            font: {
+                                family: fontFamily,
+                                size: 18,
+                                weight: 'bold'
+                            },
+                            padding: {
+                                top: 10,
+                                bottom: 25
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Número de Clientes',
+                                color: '#3c4043',
+                                font: {
+                                    family: fontFamily,
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)',
+                                drawBorder: false
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Tiempo de Simulación (minutos)',
+                                color: '#3c4043',
+                                font: {
+                                    family: fontFamily,
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // 3. Gráfico de evolución de utilización
+            const utilizationEvolutionCtx = document.getElementById('utilization-evolution-chart').getContext('2d');
+            const utilizationEvolutionChart = new Chart(utilizationEvolutionCtx, {
+                type: 'line',
+                data: {
+                    labels: timeSeriesData.timePoints,
+                    datasets: [
+                        {
+                            label: 'Cola Única',
+                            data: timeSeriesData.singleQueue.utilization,
+                            borderColor: singleQueueBorder,
+                            backgroundColor: singleQueueColor,
+                            fill: false,
+                            borderWidth: 3
+                        },
+                        {
+                            label: 'Múltiples Colas',
+                            data: timeSeriesData.multipleQueue.utilization,
+                            borderColor: multipleQueueBorder,
+                            backgroundColor: multipleQueueColor,
+                            fill: false,
+                            borderWidth: 3
+                        }
+                    ]
+                },
+                options: {
+                    ...commonOptions,
+                    plugins: {
+                        ...commonOptions.plugins,
+                        title: {
+                            display: true,
+                            text: 'Evolución de la Utilización de Servidores',
+                            color: '#202124',
+                            font: {
+                                family: fontFamily,
+                                size: 18,
+                                weight: 'bold'
+                            },
+                            padding: {
+                                top: 10,
+                                bottom: 25
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Utilización (%)',
+                                color: '#3c4043',
+                                font: {
+                                    family: fontFamily,
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)',
+                                drawBorder: false
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Tiempo de Simulación (minutos)',
+                                color: '#3c4043',
+                                font: {
+                                    family: fontFamily,
+                                    size: 14,
+                                    weight: 'bold'
+                                }
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Añadir estos gráficos a las referencias
+            chartReferences.push(waitTimeEvolutionChart, queueLengthEvolutionChart, utilizationEvolutionChart);
         }
 
         // Crear tabla de resultados
@@ -1403,6 +2390,8 @@
                     <p>Además, el sistema de cola única logra una mayor utilización de los servidores, lo que indica un uso más eficiente de los recursos.</p>
                     
                     <p><strong>Recomendación:</strong> Implementar un sistema de cola única para optimizar tanto la experiencia del cliente como la eficiencia operativa. El sistema de cola única garantiza un servicio más equitativo (el primero en llegar es el primero en ser atendido) y elimina el problema de "elegir la cola equivocada" que puede causar frustración en los clientes.</p>
+                    
+                    <p>Los gráficos de evolución temporal también muestran que el sistema de cola única mantiene un rendimiento más estable a lo largo del tiempo, con menos fluctuaciones en los tiempos de espera.</p>
                 `;
             } else if (singleBetterWaitTime) {
                 conclusion = `
@@ -1411,6 +2400,8 @@
                     <p>Aunque la utilización de servidores es ligeramente mejor en el sistema de múltiples colas, la mejora en el tiempo de espera del cliente en el sistema de cola única proporciona una ventaja más importante desde la perspectiva de servicio al cliente.</p>
                     
                     <p><strong>Recomendación:</strong> Implementar un sistema de cola única para mejorar la experiencia del cliente. La reducción del tiempo de espera y la percepción más justa del servicio (primero en llegar, primero en ser atendido) compensan cualquier pequeña desventaja en otros aspectos.</p>
+                    
+                    <p>El análisis de la evolución temporal muestra que en momentos de alta demanda, las diferencias entre ambos sistemas se hacen más pronunciadas, favoreciendo al sistema de cola única en términos de eficiencia general.</p>
                 `;
             } else {
                 conclusion = `
@@ -1421,6 +2412,8 @@
                     <p>El sistema de múltiples colas puede ser preferible en este escenario particular debido a sus ventajas específicas, como posiblemente una mejor utilización del espacio físico o la capacidad de especializar servidores para diferentes tipos de servicios.</p>
                     
                     <p><strong>Recomendación:</strong> Evaluar si las ventajas del sistema de múltiples colas compensan la posible percepción de injusticia cuando los clientes ven que otras colas avanzan más rápido que la suya.</p>
+                    
+                    <p>Los datos de evolución temporal muestran que, aunque el sistema de múltiples colas puede tener un rendimiento ligeramente mejor en promedio, presenta mayor variabilidad en los tiempos de espera, lo que podría resultar en experiencias inconsistentes para los clientes.</p>
                 `;
             }
             
@@ -1445,16 +2438,28 @@
             visualizationPanel.style.display = 'block';
             resultsPanel.style.display = 'none';
             
-            // Destruir gráficos
-            if (waitTimeChart) {
-                waitTimeChart.destroy();
-                waitTimeChart = null;
+            // Destruir todos los gráficos
+            if (chartReferences && chartReferences.length > 0) {
+                chartReferences.forEach(chart => {
+                    if (chart) chart.destroy();
+                });
+                chartReferences = [];
             }
             
-            if (utilizationChart) {
-                utilizationChart.destroy();
-                utilizationChart = null;
+            // Eliminar contenedores de gráficos adicionales
+            const timeSeriesPanel = document.querySelector('.time-series-panel');
+            if (timeSeriesPanel) {
+                timeSeriesPanel.remove();
             }
+            
+            // Eliminar gráficos adicionales
+            const additionalCharts = document.querySelectorAll('#server-utilization-chart, #queue-length-chart, #throughput-chart');
+            additionalCharts.forEach(chart => {
+                const container = chart.parentElement;
+                if (container && container.classList.contains('comparison-chart-container')) {
+                    container.remove();
+                }
+            });
         }
 
         // Resetear el estado de la simulación
