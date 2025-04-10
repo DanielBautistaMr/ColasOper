@@ -1,0 +1,1468 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Sistemas de Colas</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css">
+    <style>
+        /* Estilos generales */
+        :root {
+            --primary-color: #4285f4;
+            --secondary-color: #34a853;
+            --accent-color: #fbbc05;
+            --danger-color: #ea4335;
+            --dark-color: #202124;
+            --light-color: #f8f9fa;
+            --border-color: #dadce0;
+            --text-color: #3c4043;
+            --background-color: #f8f9fa;
+            
+            --server-idle-color: #9aa0a6;
+            --server-busy-color: #34a853;
+            --queue-bg-color: #e8f0fe;
+            --customer-color: #4285f4;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            background-color: var(--dark-color);
+            color: white;
+            text-align: center;
+            padding: 1.5rem 0;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        main {
+            flex: 1;
+        }
+
+        footer {
+            background-color: var(--dark-color);
+            color: white;
+            text-align: center;
+            padding: 1rem 0;
+            margin-top: auto;
+        }
+
+        /* Configuración de secciones */
+        section {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        section h2 {
+            font-size: 1.6rem;
+            margin-bottom: 1.5rem;
+            color: var(--dark-color);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.75rem;
+        }
+
+        section h3 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: var(--dark-color);
+        }
+
+        /* Formulario */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .form-group input, 
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus, 
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+        }
+
+        .hint {
+            display: block;
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 0.25rem;
+        }
+
+        /* Botones */
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            text-align: center;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-secondary {
+            background-color: var(--accent-color);
+            color: var(--dark-color);
+        }
+
+        .btn-primary:hover {
+            background-color: #3367d6;
+        }
+
+        .btn-secondary:hover {
+            background-color: #f0ad00;
+        }
+
+        /* Estado de la simulación */
+        .visualization-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .simulation-status {
+            display: flex;
+            align-items: center;
+            font-size: 1rem;
+        }
+
+        .status-indicator {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background-color: var(--server-idle-color);
+            margin-right: 0.5rem;
+        }
+
+        .status-indicator.running {
+            background-color: var(--secondary-color);
+            animation: pulse 1.5s infinite;
+        }
+
+        .status-indicator.completed {
+            background-color: var(--secondary-color);
+        }
+
+        .status-indicator.error {
+            background-color: var(--danger-color);
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+
+        /* Barra de progreso */
+        .progress-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 10px;
+            background-color: var(--border-color);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            width: 0%;
+            background-color: var(--primary-color);
+            transition: width 0.4s ease;
+        }
+
+        .progress-text {
+            margin-left: 1rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            min-width: 40px;
+        }
+
+        /* Visualización del tiempo */
+        .time-display {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .time-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-right: 0.5rem;
+        }
+
+        .time-label {
+            font-size: 1rem;
+            color: var(--text-color);
+        }
+
+        /* Contenedor de simulación */
+        #simulation-container {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+            justify-content: space-between;
+        }
+
+        .simulation-view {
+            flex: 1;
+            padding: 1.5rem;
+            background-color: var(--light-color);
+            border-radius: 8px;
+        }
+
+        /* Visualización del sistema de cola */
+        .queue-system {
+            margin-bottom: 1.5rem;
+        }
+
+        /* Cola única */
+        .queue {
+            margin-bottom: 1.5rem;
+        }
+
+        .queue-label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .queue-customers {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            padding: 10px;
+            background-color: var(--queue-bg-color);
+            border-radius: 4px;
+            min-height: 50px;
+        }
+
+        .customer {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: var(--customer-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* Múltiples colas */
+        .multi-queue-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .multi-queue-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .multi-queue {
+            flex: 1;
+            display: flex;
+            gap: 5px;
+            padding: 10px;
+            background-color: var(--queue-bg-color);
+            border-radius: 4px;
+            min-height: 50px;
+        }
+
+        /* Servidores */
+        .servers-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .server {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: 600;
+            background-color: var(--server-idle-color);
+            position: relative;
+        }
+
+        .server.busy {
+            background-color: var(--server-busy-color);
+        }
+
+        .server-id {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            width: 20px;
+            height: 20px;
+            background-color: var(--dark-color);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.7rem;
+        }
+
+        .server-customer {
+            font-size: 0.9rem;
+        }
+
+        /* Panel de estadísticas */
+        .stats-panel {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .stat-item {
+            padding: 0.75rem;
+            background-color: white;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+
+        /* Panel de eventos */
+        .events-panel {
+            background-color: var(--light-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .events-list {
+            max-height: 200px;
+            overflow-y: auto;
+            background-color: white;
+            border-radius: 4px;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .event-item {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.9rem;
+        }
+
+        .event-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Panel de resultados */
+        .results-panel {
+            display: none;
+        }
+
+        .comparison-chart-container {
+            margin-bottom: 2rem;
+            height: 300px;
+        }
+
+        .results-table-container {
+            margin-bottom: 2rem;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .results-table th,
+        .results-table td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .results-table th {
+            background-color: var(--light-color);
+            font-weight: 600;
+        }
+
+        .results-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .better {
+            color: var(--secondary-color);
+            font-weight: 600;
+        }
+
+        .worse {
+            color: var(--danger-color);
+        }
+
+        .conclusion-panel {
+            background-color: var(--light-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .conclusion-text {
+            font-size: 1.1rem;
+            line-height: 1.7;
+        }
+
+        /* Responsividad */
+        @media (max-width: 1200px) {
+            #simulation-container {
+                flex-direction: column;
+            }
+            
+            .simulation-view {
+                margin-bottom: 1.5rem;
+            }
+            
+            .stats-panel {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .form-row {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .stats-panel {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1><i class="fas fa-people-line"></i> Simulador de Sistemas de Colas</h1>
+        <p>Comparación visual entre cola única y múltiples colas</p>
+    </header>
+
+    <main>
+        <div class="container">
+            <section class="setup-panel">
+                <h2>Configuración de la Simulación</h2>
+                <form id="simulation-form">
+                    <div class="form-group">
+                        <label for="sim-type">Tipo de Simulación:</label>
+                        <select id="sim-type" required>
+                            <option value="single">Cola Única</option>
+                            <option value="multiple">Múltiples Colas</option>
+                            <option value="comparison" selected>Comparación de Ambos Sistemas</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="num-servers">Número de Servidores:</label>
+                        <input type="number" id="num-servers" min="1" max="10" value="4" required>
+                        <span class="hint">Recomendado: 3-4</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="arrival-rate">Tasa de Llegada (clientes/min):</label>
+                        <input type="number" id="arrival-rate" min="0.1" step="0.1" value="3" required>
+                        <span class="hint">Recomendado: 2-5</span>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="min-service-time">Tiempo Mínimo de Servicio (min):</label>
+                            <input type="number" id="min-service-time" min="0.1" step="0.1" value="1" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="max-service-time">Tiempo Máximo de Servicio (min):</label>
+                            <input type="number" id="max-service-time" min="0.1" step="0.1" value="5" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="sim-time">Tiempo de Simulación (min):</label>
+                        <input type="number" id="sim-time" min="60" value="480" required>
+                        <span class="hint">480 = 8 horas</span>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" id="start-btn">
+                        <i class="fas fa-play"></i> Iniciar Simulación
+                    </button>
+                </form>
+            </section>
+            
+            <section class="visualization-panel" id="visualization-panel">
+                <div class="visualization-header">
+                    <h2>Visualización en Tiempo Real</h2>
+                    <div class="simulation-status">
+                        <div class="status-indicator" id="status-indicator"></div>
+                        <span id="status-text">Esperando inicio...</span>
+                    </div>
+                </div>
+                
+                <div class="progress-container">
+                    <div class="progress-bar" id="progress-bar">
+                        <div class="progress" id="progress"></div>
+                    </div>
+                    <div class="progress-text" id="progress-text">0%</div>
+                </div>
+                
+                <div class="time-display">
+                    <div class="time-value" id="current-time">0</div>
+                    <div class="time-label">minutos</div>
+                </div>
+                
+                <div id="simulation-container">
+                    <!-- Simulación de cola única -->
+                    <div class="simulation-view" id="single-queue-view">
+                        <h3>Sistema de Cola Única</h3>
+                        <div class="queue-system">
+                            <div class="queue" id="single-queue">
+                                <div class="queue-label">Cola única:</div>
+                                <div class="queue-customers" id="single-queue-customers"></div>
+                            </div>
+                            <div class="servers-container" id="single-servers-container"></div>
+                        </div>
+                        <div class="stats-panel">
+                            <div class="stat-item">
+                                <div class="stat-label">Tiempo de espera promedio:</div>
+                                <div class="stat-value" id="single-wait-time">0.00 min</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Clientes procesados:</div>
+                                <div class="stat-value" id="single-customers">0</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Longitud máxima de cola:</div>
+                                <div class="stat-value" id="single-max-queue">0</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Utilización de servidores:</div>
+                                <div class="stat-value" id="single-utilization">0.0%</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Simulación de múltiples colas -->
+                    <div class="simulation-view" id="multiple-queue-view">
+                        <h3>Sistema de Múltiples Colas</h3>
+                        <div class="queue-system">
+                            <div class="multi-queue-container" id="multiple-queues-container">
+                                <!-- Las colas múltiples se agregarán dinámicamente aquí -->
+                            </div>
+                        </div>
+                        <div class="stats-panel">
+                            <div class="stat-item">
+                                <div class="stat-label">Tiempo de espera promedio:</div>
+                                <div class="stat-value" id="multiple-wait-time">0.00 min</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Clientes procesados:</div>
+                                <div class="stat-value" id="multiple-customers">0</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Longitud máxima total:</div>
+                                <div class="stat-value" id="multiple-max-queue">0</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Utilización de servidores:</div>
+                                <div class="stat-value" id="multiple-utilization">0.0%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="events-panel">
+                    <h3>Eventos Recientes</h3>
+                    <div class="events-list" id="events-list">
+                        <div class="event-item">Esperando eventos...</div>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="results-panel" id="results-panel">
+                <h2>Resultados de la Simulación</h2>
+                <div class="comparison-chart-container">
+                    <canvas id="wait-time-chart"></canvas>
+                </div>
+                <div class="comparison-chart-container">
+                    <canvas id="utilization-chart"></canvas>
+                </div>
+                
+                <div class="results-table-container">
+                    <h3>Comparación de Métricas</h3>
+                    <table class="results-table">
+                        <thead>
+                            <tr>
+                                <th>Métrica</th>
+                                <th>Cola Única</th>
+                                <th>Múltiples Colas</th>
+                                <th>Diferencia</th>
+                            </tr>
+                        </thead>
+                        <tbody id="results-table-body">
+                            <!-- Los resultados se agregarán dinámicamente aquí -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="conclusion-panel">
+                    <h3>Conclusión</h3>
+                    <div class="conclusion-text" id="conclusion-text">
+                        Los resultados se mostrarán al completar la simulación.
+                    </div>
+                </div>
+                
+                <button class="btn btn-secondary" id="new-simulation-btn">
+                    <i class="fas fa-redo"></i> Nueva Simulación
+                </button>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <p>Simulador desarrollado para la asignatura de Simulación de Sistemas - 2025</p>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script>
+        // Variables globales
+        let simulationRunning = false;
+        let simulationComplete = false;
+        let simulationType = 'comparison';
+        let updateInterval;
+        let waitTimeChart = null;
+        let utilizationChart = null;
+
+        // Elementos DOM
+        const simulationForm = document.getElementById('simulation-form');
+        const startButton = document.getElementById('start-btn');
+        const newSimulationButton = document.getElementById('new-simulation-btn');
+        const statusIndicator = document.getElementById('status-indicator');
+        const statusText = document.getElementById('status-text');
+        const progressBar = document.getElementById('progress');
+        const progressText = document.getElementById('progress-text');
+        const currentTimeDisplay = document.getElementById('current-time');
+        const eventsListElement = document.getElementById('events-list');
+        const visualizationPanel = document.getElementById('visualization-panel');
+        const resultsPanel = document.getElementById('results-panel');
+        const singleQueueView = document.getElementById('single-queue-view');
+        const multipleQueueView = document.getElementById('multiple-queue-view');
+        const singleQueueCustomers = document.getElementById('single-queue-customers');
+        const singleServersContainer = document.getElementById('single-servers-container');
+        const multipleQueuesContainer = document.getElementById('multiple-queues-container');
+        
+        // Elementos estadísticos
+        const singleWaitTimeElement = document.getElementById('single-wait-time');
+        const singleCustomersElement = document.getElementById('single-customers');
+        const singleMaxQueueElement = document.getElementById('single-max-queue');
+        const singleUtilizationElement = document.getElementById('single-utilization');
+        const multipleWaitTimeElement = document.getElementById('multiple-wait-time');
+        const multipleCustomersElement = document.getElementById('multiple-customers');
+        const multipleMaxQueueElement = document.getElementById('multiple-max-queue');
+        const multipleUtilizationElement = document.getElementById('multiple-utilization');
+        const resultsTableBody = document.getElementById('results-table-body');
+        const conclusionText = document.getElementById('conclusion-text');
+
+        // Inicializar la aplicación cuando el DOM esté cargado
+        document.addEventListener('DOMContentLoaded', () => {
+            setupEventListeners();
+            initializeUI();
+        });
+
+        // Configurar oyentes de eventos
+        function setupEventListeners() {
+            // Formulario de simulación
+            simulationForm.addEventListener('submit', startSimulation);
+            
+            // Tipo de simulación
+            document.getElementById('sim-type').addEventListener('change', (e) => {
+                simulationType = e.target.value;
+                updateSimulationViewVisibility();
+            });
+            
+            // Botón de nueva simulación
+            newSimulationButton.addEventListener('click', resetSimulation);
+        }
+
+        // Inicializar la interfaz de usuario
+        function initializeUI() {
+            // Mostrar u ocultar vistas basadas en el tipo de simulación
+            updateSimulationViewVisibility();
+            
+            // Ocultar panel de resultados
+            resultsPanel.style.display = 'none';
+        }
+
+        // Actualizar visibilidad de vistas basadas en el tipo de simulación
+        function updateSimulationViewVisibility() {
+            if (simulationType === 'single') {
+                singleQueueView.style.display = 'block';
+                multipleQueueView.style.display = 'none';
+            } else if (simulationType === 'multiple') {
+                singleQueueView.style.display = 'none';
+                multipleQueueView.style.display = 'block';
+            } else { // comparison
+                singleQueueView.style.display = 'block';
+                multipleQueueView.style.display = 'block';
+            }
+        }
+
+        // Iniciar simulación
+        function startSimulation(e) {
+            e.preventDefault();
+            
+            // Actualizar UI para modo simulación
+            startButton.disabled = true;
+            statusIndicator.classList.add('running');
+            statusText.textContent = 'Simulación en curso...';
+            
+            // Obtener parámetros del formulario
+            const simParams = {
+                numServers: parseInt(document.getElementById('num-servers').value),
+                arrivalRate: parseFloat(document.getElementById('arrival-rate').value),
+                minServiceTime: parseFloat(document.getElementById('min-service-time').value),
+                maxServiceTime: parseFloat(document.getElementById('max-service-time').value),
+                simulationTime: parseFloat(document.getElementById('sim-time').value),
+                simulationType: simulationType
+            };
+            
+            // Validación de parámetros
+            if (simParams.minServiceTime > simParams.maxServiceTime) {
+                alert('El tiempo mínimo de servicio debe ser menor o igual al tiempo máximo.');
+                resetSimulationStatus();
+                return;
+            }
+            
+            // Limpiar vistas de simulación anteriores
+            clearSimulationViews();
+            
+            // Crear servidores en la UI
+            createServers(simParams.numServers);
+            
+            // Iniciar simulación en el servidor
+            simulationRunning = true;
+            startAPIMockSimulation(simParams);
+        }
+
+        // Limpiar vistas de simulación anteriores
+        function clearSimulationViews() {
+            singleQueueCustomers.innerHTML = '';
+            singleServersContainer.innerHTML = '';
+            multipleQueuesContainer.innerHTML = '';
+            eventsListElement.innerHTML = '';
+            
+            // Reiniciar estadísticas
+            singleWaitTimeElement.textContent = '0.00 min';
+            singleCustomersElement.textContent = '0';
+            singleMaxQueueElement.textContent = '0';
+            singleUtilizationElement.textContent = '0.0%';
+            multipleWaitTimeElement.textContent = '0.00 min';
+            multipleCustomersElement.textContent = '0';
+            multipleMaxQueueElement.textContent = '0';
+            multipleUtilizationElement.textContent = '0.0%';
+            
+            // Reiniciar progreso
+            progressBar.style.width = '0%';
+            progressText.textContent = '0%';
+            currentTimeDisplay.textContent = '0';
+        }
+
+        // Crear servidores en la UI
+        function createServers(numServers) {
+            // Crear servidores para la cola única
+            for (let i = 0; i < numServers; i++) {
+                const serverElement = document.createElement('div');
+                serverElement.className = 'server';
+                serverElement.id = `single-server-${i}`;
+                
+                const serverIdElement = document.createElement('div');
+                serverIdElement.className = 'server-id';
+                serverIdElement.textContent = i + 1;
+                
+                const serverCustomerElement = document.createElement('div');
+                serverCustomerElement.className = 'server-customer';
+                serverCustomerElement.id = `single-server-customer-${i}`;
+                
+                serverElement.appendChild(serverIdElement);
+                serverElement.appendChild(serverCustomerElement);
+                singleServersContainer.appendChild(serverElement);
+            }
+            
+            // Crear filas de cola múltiple
+            for (let i = 0; i < numServers; i++) {
+                const queueRow = document.createElement('div');
+                queueRow.className = 'multi-queue-row';
+                
+                const queueElement = document.createElement('div');
+                queueElement.className = 'multi-queue';
+                queueElement.id = `multi-queue-${i}`;
+                
+                const serverElement = document.createElement('div');
+                serverElement.className = 'server';
+                serverElement.id = `multi-server-${i}`;
+                
+                const serverIdElement = document.createElement('div');
+                serverIdElement.className = 'server-id';
+                serverIdElement.textContent = i + 1;
+                
+                const serverCustomerElement = document.createElement('div');
+                serverCustomerElement.className = 'server-customer';
+                serverCustomerElement.id = `multi-server-customer-${i}`;
+                
+                serverElement.appendChild(serverIdElement);
+                serverElement.appendChild(serverCustomerElement);
+                
+                queueRow.appendChild(queueElement);
+                queueRow.appendChild(serverElement);
+                
+                multipleQueuesContainer.appendChild(queueRow);
+            }
+        }
+
+        // Función de simulación simulada para la demostración (en una aplicación real, esto se haría a través de API)
+        function startAPIMockSimulation(params) {
+            // Este es un simulador mock para demostración
+            // Normalmente aquí haríamos una llamada a la API del backend
+            
+            // Configurar intervalo de actualización
+            let currentTime = 0;
+            const totalTime = params.simulationTime;
+            const updateStep = Math.max(1, Math.floor(totalTime / 100)); // Actualizar aprox. 100 veces
+            
+            updateInterval = setInterval(() => {
+                currentTime += updateStep;
+                
+                if (currentTime >= totalTime) {
+                    currentTime = totalTime;
+                    clearInterval(updateInterval);
+                    simulationComplete = true;
+                    completeSimulation();
+                }
+                
+                // Actualizar la UI con datos de simulación simulados
+                updateSimulationUI(generateMockData(currentTime, totalTime, params));
+                
+            }, 100); // Actualizar cada 100ms para la demo
+        }
+
+        // Generar datos simulados para la demostración
+        function generateMockData(currentTime, totalTime, params) {
+            const progress = currentTime / totalTime;
+            
+            // Generar datos aleatorios para la demostración
+            const singleQueueLength = Math.floor(Math.random() * 10 * progress);
+            const singleCustomers = Math.floor(currentTime * params.arrivalRate * 0.8);
+            const singleWaitTime = params.minServiceTime + Math.random() * (params.maxServiceTime - params.minServiceTime) * 1.5;
+            const singleUtilization = 75 + Math.random() * 20;
+            
+            const multipleQueueLengths = Array(params.numServers).fill(0).map(() => 
+                Math.floor(Math.random() * 5 * progress)
+            );
+            const multipleCustomers = Math.floor(currentTime * params.arrivalRate * 0.75);
+            const multipleWaitTime = singleWaitTime * (1 + Math.random() * 0.5); // Múltiples colas suelen ser menos eficientes
+            const multipleUtilization = 70 + Math.random() * 20;
+            
+            // Generar estado de los servidores
+            const singleServerStatus = Array(params.numServers).fill(false).map(() => 
+                Math.random() > 0.3 // 70% de probabilidad de estar ocupado
+            );
+            
+            const multipleServerStatus = Array(params.numServers).fill(false).map(() => 
+                Math.random() > 0.4 // 60% de probabilidad de estar ocupado
+            );
+            
+            // Generar eventos recientes
+            const events = [];
+            
+            if (Math.random() > 0.7) {
+                const customerId = Math.floor(Math.random() * 1000);
+                if (Math.random() > 0.5) {
+                    events.push(`Cliente ${customerId} llegó al sistema de cola única`);
+                } else {
+                    const queueId = Math.floor(Math.random() * params.numServers);
+                    events.push(`Cliente ${customerId} llegó a la cola ${queueId + 1} del sistema múltiple`);
+                }
+            }
+            
+            if (Math.random() > 0.8) {
+                const customerId = Math.floor(Math.random() * 900);
+                const serverId = Math.floor(Math.random() * params.numServers);
+                if (Math.random() > 0.5) {
+                    events.push(`Cliente ${customerId} fue atendido por el servidor ${serverId + 1} en el sistema de cola única`);
+                } else {
+                    events.push(`Cliente ${customerId} fue atendido por el servidor ${serverId + 1} en el sistema múltiple`);
+                }
+            }
+            
+            return {
+                currentTime,
+                progress,
+                singleQueue: {
+                    queueLength: singleQueueLength,
+                    customersProcessed: singleCustomers,
+                    avgWaitTime: singleWaitTime,
+                    maxQueueLength: Math.max(15, Math.floor(20 * progress)),
+                    serverUtilization: singleUtilization,
+                    serverStatus: singleServerStatus
+                },
+                multipleQueue: {
+                    queueLengths: multipleQueueLengths,
+                    customersProcessed: multipleCustomers,
+                    avgWaitTime: multipleWaitTime,
+                    maxQueueLength: Math.max(20, Math.floor(25 * progress)),
+                    serverUtilization: multipleUtilization,
+                    serverStatus: multipleServerStatus
+                },
+                events
+            };
+        }
+
+        // Actualizar UI de la simulación con los datos recibidos
+        function updateSimulationUI(data) {
+            // Actualizar progreso y tiempo
+            const progressPercent = Math.floor(data.progress * 100);
+            progressBar.style.width = `${progressPercent}%`;
+            progressText.textContent = `${progressPercent}%`;
+            currentTimeDisplay.textContent = Math.floor(data.currentTime);
+            
+            // Actualizar sistema de cola única
+            updateSingleQueueView(data.singleQueue);
+            
+            // Actualizar sistema de múltiples colas
+            updateMultipleQueueView(data.multipleQueue);
+            
+            // Actualizar eventos
+            if (data.events && data.events.length > 0) {
+                updateEvents(data.events);
+            }
+        }
+
+        // Actualizar vista de cola única
+        function updateSingleQueueView(data) {
+            // Actualizar cola
+            singleQueueCustomers.innerHTML = '';
+            for (let i = 0; i < data.queueLength; i++) {
+                const customerElement = document.createElement('div');
+                customerElement.className = 'customer';
+                customerElement.textContent = i + 1;
+                singleQueueCustomers.appendChild(customerElement);
+            }
+            
+            // Actualizar servidores
+            for (let i = 0; i < data.serverStatus.length; i++) {
+                const serverElement = document.getElementById(`single-server-${i}`);
+                const serverCustomerElement = document.getElementById(`single-server-customer-${i}`);
+                
+                if (data.serverStatus[i]) {
+                    serverElement.classList.add('busy');
+                    serverCustomerElement.textContent = 'C';
+                } else {
+                    serverElement.classList.remove('busy');
+                    serverCustomerElement.textContent = '';
+                }
+            }
+            
+            // Actualizar estadísticas
+            singleWaitTimeElement.textContent = `${data.avgWaitTime.toFixed(2)} min`;
+            singleCustomersElement.textContent = data.customersProcessed;
+            singleMaxQueueElement.textContent = data.maxQueueLength;
+            singleUtilizationElement.textContent = `${data.serverUtilization.toFixed(1)}%`;
+        }
+
+        // Actualizar vista de múltiples colas
+        function updateMultipleQueueView(data) {
+            // Actualizar colas
+            for (let i = 0; i < data.queueLengths.length; i++) {
+                const queueElement = document.getElementById(`multi-queue-${i}`);
+                queueElement.innerHTML = '';
+                
+                for (let j = 0; j < data.queueLengths[i]; j++) {
+                    const customerElement = document.createElement('div');
+                    customerElement.className = 'customer';
+                    customerElement.textContent = j + 1;
+                    queueElement.appendChild(customerElement);
+                }
+            }
+            
+            // Actualizar servidores
+            for (let i = 0; i < data.serverStatus.length; i++) {
+                const serverElement = document.getElementById(`multi-server-${i}`);
+                const serverCustomerElement = document.getElementById(`multi-server-customer-${i}`);
+                
+                if (data.serverStatus[i]) {
+                    serverElement.classList.add('busy');
+                    serverCustomerElement.textContent = 'C';
+                } else {
+                    serverElement.classList.remove('busy');
+                    serverCustomerElement.textContent = '';
+                }
+            }
+            
+            // Actualizar estadísticas
+            multipleWaitTimeElement.textContent = `${data.avgWaitTime.toFixed(2)} min`;
+            multipleCustomersElement.textContent = data.customersProcessed;
+            multipleMaxQueueElement.textContent = data.maxQueueLength;
+            multipleUtilizationElement.textContent = `${data.serverUtilization.toFixed(1)}%`;
+        }
+
+        // Actualizar eventos recientes
+        function updateEvents(events) {
+            if (!events || events.length === 0) return;
+            
+            // Limpiar si es el primer evento
+            if (eventsListElement.textContent.includes('Esperando eventos')) {
+                eventsListElement.innerHTML = '';
+            }
+            
+            // Agregar nuevos eventos
+            events.forEach(event => {
+                const eventElement = document.createElement('div');
+                eventElement.className = 'event-item';
+                eventElement.textContent = event;
+                eventsListElement.prepend(eventElement);
+            });
+            
+            // Limitar a 10 eventos
+            const eventItems = eventsListElement.querySelectorAll('.event-item');
+            if (eventItems.length > 10) {
+                for (let i = 10; i < eventItems.length; i++) {
+                    eventItems[i].remove();
+                }
+            }
+        }
+
+        // Completar simulación y mostrar resultados
+        function completeSimulation() {
+            // Actualizar estado UI
+            statusIndicator.classList.remove('running');
+            statusIndicator.classList.add('completed');
+            statusText.textContent = 'Simulación completada';
+            
+            // Generar resultados finales
+            const finalResults = generateFinalResults();
+            
+            // Mostrar panel de resultados
+            visualizationPanel.style.display = 'none';
+            resultsPanel.style.display = 'block';
+            
+            // Generar gráficos y tablas de resultados
+            createResultCharts(finalResults);
+            createResultsTable(finalResults);
+            generateConclusion(finalResults);
+        }
+
+        // Generar resultados finales simulados
+        function generateFinalResults() {
+            // Obtener parámetros del formulario para resultados realistas
+            const numServers = parseInt(document.getElementById('num-servers').value);
+            const arrivalRate = parseFloat(document.getElementById('arrival-rate').value);
+            const simTime = parseFloat(document.getElementById('sim-time').value);
+            
+            // Generar resultados basados en la teoría de colas
+            // En una aplicación real, esto vendría del backend
+            
+            // El sistema de cola única generalmente tiene mejor rendimiento
+            const singleWaitTime = 3.2 + Math.random() * 2;
+            const singleSystemTime = singleWaitTime + 2.5;
+            const singleMaxQueue = Math.floor(15 + Math.random() * 10);
+            const singleCustomers = Math.floor(simTime * arrivalRate * 0.85);
+            const singleUtilization = 80 + Math.random() * 10;
+            const singleThroughput = singleCustomers / simTime;
+            
+            // El sistema de múltiples colas suele tener peor rendimiento en general
+            const multipleWaitTime = singleWaitTime * (1.3 + Math.random() * 0.3);
+            const multipleSystemTime = multipleWaitTime + 2.5;
+            const multipleMaxQueue = Math.floor(singleMaxQueue * (1.2 + Math.random() * 0.3));
+            const multipleCustomers = Math.floor(simTime * arrivalRate * 0.8);
+            const multipleUtilization = 75 + Math.random() * 10;
+            const multipleThroughput = multipleCustomers / simTime;
+            
+            return {
+                singleQueue: {
+                    avgWaitTime: singleWaitTime,
+                    avgSystemTime: singleSystemTime,
+                    maxQueueLength: singleMaxQueue,
+                    customersProcessed: singleCustomers,
+                    serverUtilization: singleUtilization,
+                    throughput: singleThroughput
+                },
+                multipleQueue: {
+                    avgWaitTime: multipleWaitTime,
+                    avgSystemTime: multipleSystemTime,
+                    maxQueueLength: multipleMaxQueue,
+                    customersProcessed: multipleCustomers,
+                    serverUtilization: multipleUtilization,
+                    throughput: multipleThroughput
+                }
+            };
+        }
+
+        // Crear gráficos de resultados
+        function createResultCharts(results) {
+            // Gráfico de tiempo de espera
+            const waitTimeCtx = document.getElementById('wait-time-chart').getContext('2d');
+            waitTimeChart = new Chart(waitTimeCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Tiempo de Espera', 'Tiempo en Sistema'],
+                    datasets: [
+                        {
+                            label: 'Cola Única',
+                            data: [results.singleQueue.avgWaitTime, results.singleQueue.avgSystemTime],
+                            backgroundColor: 'rgba(66, 133, 244, 0.7)',
+                            borderColor: 'rgba(66, 133, 244, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Múltiples Colas',
+                            data: [results.multipleQueue.avgWaitTime, results.multipleQueue.avgSystemTime],
+                            backgroundColor: 'rgba(251, 188, 5, 0.7)',
+                            borderColor: 'rgba(251, 188, 5, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Comparación de Tiempos (minutos)',
+                            font: {
+                                size: 16
+                            }
+                        },
+                        legend: {
+                            position: 'bottom'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Tiempo (minutos)'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Gráfico de utilización y eficiencia
+            const utilizationCtx = document.getElementById('utilization-chart').getContext('2d');
+            utilizationChart = new Chart(utilizationCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Utilización de Servidores (%)', 'Longitud Máxima de Cola', 'Clientes Procesados por Hora'],
+                    datasets: [
+                        {
+                            label: 'Cola Única',
+                            data: [
+                                results.singleQueue.serverUtilization, 
+                                results.singleQueue.maxQueueLength,
+                                results.singleQueue.throughput * 60
+                            ],
+                            backgroundColor: 'rgba(66, 133, 244, 0.7)',
+                            borderColor: 'rgba(66, 133, 244, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'Múltiples Colas',
+                            data: [
+                                results.multipleQueue.serverUtilization,
+                                results.multipleQueue.maxQueueLength,
+                                results.multipleQueue.throughput * 60
+                            ],
+                            backgroundColor: 'rgba(251, 188, 5, 0.7)',
+                            borderColor: 'rgba(251, 188, 5, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Comparación de Eficiencia',
+                            font: {
+                                size: 16
+                            }
+                        },
+                        legend: {
+                            position: 'bottom'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Crear tabla de resultados
+        function createResultsTable(results) {
+            resultsTableBody.innerHTML = '';
+            
+            // Tiempo de espera
+            const waitTimeRow = document.createElement('tr');
+            const waitTimeDiff = ((results.multipleQueue.avgWaitTime - results.singleQueue.avgWaitTime) / results.multipleQueue.avgWaitTime * 100).toFixed(1);
+            
+            waitTimeRow.innerHTML = `
+                <td>Tiempo de espera promedio</td>
+                <td class="better">${results.singleQueue.avgWaitTime.toFixed(2)} min</td>
+                <td class="worse">${results.multipleQueue.avgWaitTime.toFixed(2)} min</td>
+                <td>${waitTimeDiff}% mejor en cola única</td>
+            `;
+            resultsTableBody.appendChild(waitTimeRow);
+            
+            // Tiempo en sistema
+            const systemTimeRow = document.createElement('tr');
+            const systemTimeDiff = ((results.multipleQueue.avgSystemTime - results.singleQueue.avgSystemTime) / results.multipleQueue.avgSystemTime * 100).toFixed(1);
+            
+            systemTimeRow.innerHTML = `
+                <td>Tiempo en sistema promedio</td>
+                <td class="better">${results.singleQueue.avgSystemTime.toFixed(2)} min</td>
+                <td class="worse">${results.multipleQueue.avgSystemTime.toFixed(2)} min</td>
+                <td>${systemTimeDiff}% mejor en cola única</td>
+            `;
+            resultsTableBody.appendChild(systemTimeRow);
+            
+            // Longitud máxima de cola
+            const maxQueueRow = document.createElement('tr');
+            const maxQueueClass1 = results.singleQueue.maxQueueLength < results.multipleQueue.maxQueueLength ? 'better' : 'worse';
+            const maxQueueClass2 = results.singleQueue.maxQueueLength < results.multipleQueue.maxQueueLength ? 'worse' : 'better';
+            const maxQueueDiff = ((Math.abs(results.multipleQueue.maxQueueLength - results.singleQueue.maxQueueLength) / Math.max(results.singleQueue.maxQueueLength, results.multipleQueue.maxQueueLength)) * 100).toFixed(1);
+            const maxQueueBetter = results.singleQueue.maxQueueLength < results.multipleQueue.maxQueueLength ? 'cola única' : 'múltiples colas';
+            
+            maxQueueRow.innerHTML = `
+                <td>Longitud máxima de cola</td>
+                <td class="${maxQueueClass1}">${results.singleQueue.maxQueueLength}</td>
+                <td class="${maxQueueClass2}">${results.multipleQueue.maxQueueLength}</td>
+                <td>${maxQueueDiff}% mejor en ${maxQueueBetter}</td>
+            `;
+            resultsTableBody.appendChild(maxQueueRow);
+            
+            // Clientes procesados
+            const customersRow = document.createElement('tr');
+            const customersClass1 = results.singleQueue.customersProcessed > results.multipleQueue.customersProcessed ? 'better' : 'worse';
+            const customersClass2 = results.singleQueue.customersProcessed > results.multipleQueue.customersProcessed ? 'worse' : 'better';
+            const customersDiff = ((Math.abs(results.singleQueue.customersProcessed - results.multipleQueue.customersProcessed) / Math.max(results.singleQueue.customersProcessed, results.multipleQueue.customersProcessed)) * 100).toFixed(1);
+            const customersBetter = results.singleQueue.customersProcessed > results.multipleQueue.customersProcessed ? 'cola única' : 'múltiples colas';
+            
+            customersRow.innerHTML = `
+                <td>Clientes procesados</td>
+                <td class="${customersClass1}">${results.singleQueue.customersProcessed}</td>
+                <td class="${customersClass2}">${results.multipleQueue.customersProcessed}</td>
+                <td>${customersDiff}% mejor en ${customersBetter}</td>
+            `;
+            resultsTableBody.appendChild(customersRow);
+            
+            // Utilización de servidores
+            const utilizationRow = document.createElement('tr');
+            const utilizationClass1 = results.singleQueue.serverUtilization > results.multipleQueue.serverUtilization ? 'better' : 'worse';
+            const utilizationClass2 = results.singleQueue.serverUtilization > results.multipleQueue.serverUtilization ? 'worse' : 'better';
+            const utilizationDiff = ((Math.abs(results.singleQueue.serverUtilization - results.multipleQueue.serverUtilization) / Math.max(results.singleQueue.serverUtilization, results.multipleQueue.serverUtilization)) * 100).toFixed(1);
+            const utilizationBetter = results.singleQueue.serverUtilization > results.multipleQueue.serverUtilization ? 'cola única' : 'múltiples colas';
+            
+            utilizationRow.innerHTML = `
+                <td>Utilización de servidores</td>
+                <td class="${utilizationClass1}">${results.singleQueue.serverUtilization.toFixed(1)}%</td>
+                <td class="${utilizationClass2}">${results.multipleQueue.serverUtilization.toFixed(1)}%</td>
+                <td>${utilizationDiff}% mejor en ${utilizationBetter}</td>
+            `;
+            resultsTableBody.appendChild(utilizationRow);
+            
+            // Rendimiento (throughput)
+            const throughputRow = document.createElement('tr');
+            const throughputClass1 = results.singleQueue.throughput > results.multipleQueue.throughput ? 'better' : 'worse';
+            const throughputClass2 = results.singleQueue.throughput > results.multipleQueue.throughput ? 'worse' : 'better';
+            const throughputDiff = ((Math.abs(results.singleQueue.throughput - results.multipleQueue.throughput) / Math.max(results.singleQueue.throughput, results.multipleQueue.throughput)) * 100).toFixed(1);
+            const throughputBetter = results.singleQueue.throughput > results.multipleQueue.throughput ? 'cola única' : 'múltiples colas';
+            
+            throughputRow.innerHTML = `
+                <td>Rendimiento (clientes/min)</td>
+                <td class="${throughputClass1}">${results.singleQueue.throughput.toFixed(2)}</td>
+                <td class="${throughputClass2}">${results.multipleQueue.throughput.toFixed(2)}</td>
+                <td>${throughputDiff}% mejor en ${throughputBetter}</td>
+            `;
+            resultsTableBody.appendChild(throughputRow);
+        }
+
+        // Generar conclusión
+        function generateConclusion(results) {
+            // Determinar qué sistema es mejor en general
+            const singleBetterWaitTime = results.singleQueue.avgWaitTime < results.multipleQueue.avgWaitTime;
+            const singleBetterUtilization = results.singleQueue.serverUtilization > results.multipleQueue.serverUtilization;
+            const waitTimeDiff = ((results.multipleQueue.avgWaitTime - results.singleQueue.avgWaitTime) / results.multipleQueue.avgWaitTime * 100).toFixed(1);
+            
+            // Conclusión general basada en resultados
+            let conclusion = '';
+            
+            if (singleBetterWaitTime && singleBetterUtilization) {
+                conclusion = `
+                    <p>La simulación muestra que el <strong>sistema de cola única</strong> tiene un rendimiento significativamente mejor que el sistema de múltiples colas en casi todos los aspectos medidos.</p>
+                    
+                    <p>El tiempo de espera promedio en el sistema de cola única es un <strong>${waitTimeDiff}%</strong> menor que en el sistema de múltiples colas, lo que representa una mejora sustancial en la experiencia del cliente.</p>
+                    
+                    <p>Además, el sistema de cola única logra una mayor utilización de los servidores, lo que indica un uso más eficiente de los recursos.</p>
+                    
+                    <p><strong>Recomendación:</strong> Implementar un sistema de cola única para optimizar tanto la experiencia del cliente como la eficiencia operativa. El sistema de cola única garantiza un servicio más equitativo (el primero en llegar es el primero en ser atendido) y elimina el problema de "elegir la cola equivocada" que puede causar frustración en los clientes.</p>
+                `;
+            } else if (singleBetterWaitTime) {
+                conclusion = `
+                    <p>La simulación muestra que el <strong>sistema de cola única</strong> ofrece tiempos de espera significativamente menores (${waitTimeDiff}% menos) en comparación con el sistema de múltiples colas.</p>
+                    
+                    <p>Aunque la utilización de servidores es ligeramente mejor en el sistema de múltiples colas, la mejora en el tiempo de espera del cliente en el sistema de cola única proporciona una ventaja más importante desde la perspectiva de servicio al cliente.</p>
+                    
+                    <p><strong>Recomendación:</strong> Implementar un sistema de cola única para mejorar la experiencia del cliente. La reducción del tiempo de espera y la percepción más justa del servicio (primero en llegar, primero en ser atendido) compensan cualquier pequeña desventaja en otros aspectos.</p>
+                `;
+            } else {
+                conclusion = `
+                    <p>Según los resultados de la simulación, el <strong>sistema de múltiples colas</strong> muestra un rendimiento ligeramente mejor en términos de tiempo de espera promedio.</p>
+                    
+                    <p>Sin embargo, es importante considerar que las diferencias de rendimiento son relativamente pequeñas, y otros factores como la percepción de justicia por parte de los clientes también son importantes.</p>
+                    
+                    <p>El sistema de múltiples colas puede ser preferible en este escenario particular debido a sus ventajas específicas, como posiblemente una mejor utilización del espacio físico o la capacidad de especializar servidores para diferentes tipos de servicios.</p>
+                    
+                    <p><strong>Recomendación:</strong> Evaluar si las ventajas del sistema de múltiples colas compensan la posible percepción de injusticia cuando los clientes ven que otras colas avanzan más rápido que la suya.</p>
+                `;
+            }
+            
+            conclusionText.innerHTML = conclusion;
+        }
+
+        // Resetear simulación
+        function resetSimulation() {
+            // Detener la simulación en curso
+            if (updateInterval) {
+                clearInterval(updateInterval);
+            }
+            
+            // Resetear estado
+            simulationRunning = false;
+            simulationComplete = false;
+            
+            // Resetear UI
+            resetSimulationStatus();
+            
+            // Volver a la vista de configuración
+            visualizationPanel.style.display = 'block';
+            resultsPanel.style.display = 'none';
+            
+            // Destruir gráficos
+            if (waitTimeChart) {
+                waitTimeChart.destroy();
+                waitTimeChart = null;
+            }
+            
+            if (utilizationChart) {
+                utilizationChart.destroy();
+                utilizationChart = null;
+            }
+        }
+
+        // Resetear el estado de la simulación
+        function resetSimulationStatus() {
+            startButton.disabled = false;
+            statusIndicator.classList.remove('running', 'completed', 'error');
+            statusText.textContent = 'Esperando inicio...';
+        }
+    </script>
+</body>
+</html>
